@@ -1,4 +1,74 @@
 <?php
+session_start();
+
+// Dil seçimi yönetimi
+if (isset($_GET['lang']) && in_array($_GET['lang'], ['tr', 'en'])) {
+    $_SESSION['lang'] = $_GET['lang'];
+}
+$lang = $_SESSION['lang'] ?? 'tr';
+
+// Çeviri Sözlüğü
+$translations = [
+    'tr' => [
+        'title' => 'Tıla Software TLS & TLV Teknolojisi',
+        'subtitle' => 'Müzik ve Video formatı ve oynatıcısı',
+        'formats_title' => 'Tıla Medya Biçimleri',
+        'formats_desc' => '<b>.TLS</b> (Tıla Audio) ve <b>.TLV</b> (Tıla Video), Tıla Software tarafından geliştirilen bağımsız ikili medya formatlarıdır.',
+        'feat_1' => '<b>Çift Format Desteği:</b> Ses için <code>.tls</code>, video yayınları için <code>.tlv</code> ikili mimarisi.',
+        'feat_2' => '<b>Tek Oynatıcı:</b> Her iki format da tek bir <b>Tıla Medya Oynatıcı</b> uygulamasıyla çalışır.',
+        'feat_3' => '<b>Gelişmiş Başlık Koruması:</b> <code>TLS2</code> ve <code>TLV1</code> doğrulamalı ikili şifreleme.',
+        'feat_4' => '<b>Güvenli Temizlik:</b> İndirilen medya dosyaları sunucuda iz bırakmadan anında temizlenir.',
+        'converter_title' => 'Medya Dönüştürücü',
+        'converter_desc' => 'Dönüştürmek istediğiniz format türünü seçin:',
+        'opt_tls' => '🎵 .TLS (Ses Formatına Dönüştür)',
+        'opt_tlv' => '🎬 .TLV (Video Formatına Dönüştür)',
+        'file_label' => '📁 Medya Dosyası Seçin',
+        'file_selected' => '📄 Dosya seçildi: ',
+        'file_default' => '📁 Medya Dosyası Seçin',
+        'btn_convert' => 'Dönüştür ve İndir',
+        'btn_download' => '⬇ İndir',
+        'btn_exe' => '💻 Tıla Medya Oynatıcı\'yı İndir (.exe)',
+        'bug_title' => '🛠 Hata / Sorun Bildir',
+        'bug_desc' => 'Uygulamada veya formatta bir hata ile karşılaştıysan bize bildirebilirsin:',
+        'bug_name' => 'Adın veya Rumuzun (İsteğe bağlı)',
+        'bug_text' => 'Yaşadığın sorunu veya hatayı detaylı anlat...',
+        'bug_btn' => 'Bildirimi Gönder',
+        'footer' => 'Tüm hakları saklıdır.',
+        'success_conv' => 'Dosyanız başarıyla dönüştürüldü!',
+        'success_bug' => 'Hata bildirimin başarıyla gönderildi. Teşekkürler!'
+    ],
+    'en' => [
+        'title' => 'Tila Software TLS & TLV Technology',
+        'subtitle' => 'Music & Video format and player',
+        'formats_title' => 'Tila Media Formats',
+        'formats_desc' => '<b>.TLS</b> (Tıla Audio) and <b>.TLV</b> (Tıla Video) are independent binary media formats developed by Tila Software.',
+        'feat_1' => '<b>Dual Format Support:</b> Binary architecture using <code>.tls</code> for audio and <code>.tlv</code> for video.',
+        'feat_2' => '<b>Single Player:</b> Both formats run seamlessly on the single <b>Tila Media Player</b> app.',
+        'feat_3' => '<b>Advanced Header Protection:</b> Binary encryption validated with <code>TLS2</code> and <code>TLV1</code> headers.',
+        'feat_4' => '<b>Secure Cleanup:</b> Downloaded media files are instantly wiped from the server leaving no trace.',
+        'converter_title' => 'Media Converter',
+        'converter_desc' => 'Select the format type you want to convert to:',
+        'opt_tls' => '🎵 .TLS (Convert to Audio)',
+        'opt_tlv' => '🎬 .TLV (Convert to Video)',
+        'file_label' => '📁 Choose Media File',
+        'file_selected' => '📄 File selected: ',
+        'file_default' => '📁 Choose Media File',
+        'btn_convert' => 'Convert & Download',
+        'btn_download' => '⬇ Download',
+        'btn_exe' => '💻 Download Tila Media Player (.exe)',
+        'bug_title' => '🛠 Report a Bug / Issue',
+        'bug_desc' => 'If you encounter any bugs in the app or format, let us know:',
+        'bug_name' => 'Your Name or Alias (Optional)',
+        'bug_text' => 'Describe the issue or error in detail...',
+        'bug_btn' => 'Send Report',
+        'footer' => 'All rights reserved.',
+        'success_conv' => 'Your file has been successfully converted!',
+        'success_bug' => 'Your bug report has been successfully sent. Thanks!'
+    ]
+];
+
+$t = $translations[$lang];
+
 $uploadDir = __DIR__ . '/uploads/';
 $reportsFile = __DIR__ . '/reports.json';
 
@@ -76,7 +146,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         $targetPath = $uploadDir . $outputFile;
         if (file_put_contents($targetPath, $finalContent) !== false) {
-            $message = "Dosyanız " . strtoupper($formatType) . " formatına başarıyla dönüştürüldü!";
+            $message = $t['success_conv'];
             $downloadFile = $outputFile;
         } else {
             $message = "Hata: Dosya oluşturulamadı.";
@@ -103,7 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         ];
 
         file_put_contents($reportsFile, json_encode($reports, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-        $bugMessage = "Hata bildirimin başarıyla gönderildi. Teşekkürler!";
+        $bugMessage = $t['success_bug'];
     } else {
         $bugMessage = "Lütfen hata açıklamasını boş bırakma.";
     }
@@ -111,17 +181,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 ?>
 
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="<?= $lang ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tıla Software - TLS & TLV Engine</title>
+    <title><?= $t['title'] ?></title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f0f12; color: #e1e1e6; line-height: 1.6; padding: 40px 20px; }
-        .container { max-width: 1100px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; position: relative; }
         
-        header { text-align: center; margin-bottom: 40px; }
+        /* Dil Seçici Stili */
+        .lang-switcher { position: absolute; top: 0; right: 0; display: flex; gap: 8px; }
+        .lang-switcher a { background: #18181c; color: #8a8a93; border: 1px solid #282830; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold; transition: 0.2s; }
+        .lang-switcher a.active, .lang-switcher a:hover { background: #0078d4; color: #fff; border-color: #0078d4; }
+
+        header { text-align: center; margin-bottom: 40px; margin-top: 20px; }
         header h1 { font-size: 2.2rem; color: #0078d4; margin-bottom: 8px; }
         header p { color: #8a8a93; font-size: 1.05rem; }
 
@@ -157,7 +232,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         .btn-exe { display: inline-block; background: #2d2d30; color: #fff; border: 1px solid #0078d4; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; transition: 0.2s; width: 100%; }
         .btn-exe:hover { background: #0078d4; }
 
-        /* Hata Bildirim Kutusu Stili */
         .bug-report-panel { background: #18181c; border-radius: 12px; padding: 30px; border: 1px solid #282830; margin-top: 30px; }
         .bug-report-panel h2 { color: #fff; font-size: 1.4rem; margin-bottom: 10px; }
         .bug-report-panel input[type="text"], .bug-report-panel textarea { width: 100%; padding: 10px; margin-bottom: 15px; background: #222228; color: #fff; border: 1px solid #0078d4; border-radius: 6px; font-family: inherit; }
@@ -170,46 +244,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <body>
 
 <div class="container">
+    <!-- DİL DEĞİŞTİRME BUTONLARI -->
+    <div class="lang-switcher">
+        <a href="?lang=tr" class="<?= $lang === 'tr' ? 'active' : '' ?>">TR</a>
+        <a href="?lang=en" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
+    </div>
+
     <header>
         <h1>Tıla Software TLS & TLV Teknolojisi</h1>
-        <p>Music & Video format and player</p>
+        <p><?= $t['subtitle'] ?></p>
     </header>
 
     <div class="layout">
         <!-- BİLGİ PANELİ -->
         <div class="info-panel">
-            <h2>Tıla Medya Biçimleri</h2>
-            <p><b>.TLS</b> (Tıla Audio) ve <b>.TLV</b> (Tıla Video), Tıla Software tarafından geliştirilen bağımsız ikili medya formatlarıdır.</p>
+            <h2><?= $t['formats_title'] ?></h2>
+            <p><?= $t['formats_desc'] ?></p>
             
             <ul class="feature-list">
-                <li><b>Çift Format Desteği:</b> Ses için `.tls`, video yayınları için `.tlv` ikili mimarisi.</li>
-                <li><b>Tek Oynatıcı:</b> Her iki format da tek bir Tıla Medya Oynatıcı uygulamasıyla çalışır.</li>
-                <li><b>Gelişmiş Başlık Koruması:</b> `TLS2` ve `TLV1` doğrulamalı ikili şifreleme.</li>
-                <li><b>Güvenli Temizlik:</b> İndirilen medya dosyaları sunucuda iz bırakmadan anında temizlenir.</li>
+                <li><?= $t['feat_1'] ?></li>
+                <li><?= $t['feat_2'] ?></li>
+                <li><?= $t['feat_3'] ?></li>
+                <li><?= $t['feat_4'] ?></li>
             </ul>
         </div>
 
         <!-- DÖNÜŞTÜRME PANELİ -->
         <div class="convert-panel">
             <div>
-                <h2>Medya Dönüştürücü</h2>
-                <p style="color: #8a8a93; font-size: 0.85rem; margin-bottom: 15px;">Dönüştürmek istediğiniz format türünü seçin:</p>
+                <h2><?= $t['converter_title'] ?></h2>
+                <p style="color: #8a8a93; font-size: 0.85rem; margin-bottom: 15px;"><?= $t['converter_desc'] ?></p>
 
                 <form action="" method="POST" enctype="multipart/form-data">
                     <input type="hidden" name="action" value="convert">
                     <select name="format_type">
-                        <option value="tls">🎵 .TLS (Ses Formatına Dönüştür)</option>
-                        <option value="tlv">🎬 .TLV (Video Formatına Dönüştür)</option>
+                        <option value="tls"><?= $t['opt_tls'] ?></option>
+                        <option value="tlv"><?= $t['opt_tlv'] ?></option>
                     </select>
 
                     <div class="file-input-wrapper">
                         <label for="media_file" class="file-label" id="fileLabel">
-                            📁 Medya Dosyası Seçin
+                            <?= $t['file_label'] ?>
                         </label>
-                        <input type="file" name="media_file" id="media_file" required onchange="updateFileName(this)">
+                        <input type="file" name="media_file" id="media_file" required onchange="updateFileName(this, '<?= $t['file_selected'] ?>')">
                     </div>
 
-                    <button type="submit" class="btn-submit">Dönüştür ve İndir</button>
+                    <button type="submit" class="btn-submit"><?= $t['btn_convert'] ?></button>
                 </form>
 
                 <?php if ($message && isset($_POST['action']) && $_POST['action'] === 'convert'): ?>
@@ -217,25 +297,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <?php endif; ?>
 
                 <?php if ($downloadFile): ?>
-                    <a href="?download=<?= urlencode($downloadFile) ?>" class="btn-download">⬇ İndir</a>
+                    <a href="?download=<?= urlencode($downloadFile) ?>" class="btn-download"><?= $t['btn_download'] ?></a>
                 <?php endif; ?>
             </div>
 
             <div class="app-download-box">
-                <a href="https://github.com/atlasalan/TilaSoftware.TLS/raw/main/TilaPlayerGUI.exe" class="btn-exe" target="_blank">💻 Tıla Medya Oynatıcı'yı İndir (.exe)</a>
+                <a href="https://github.com/atlasalan/TilaSoftware.TLS/raw/main/TilaPlayerGUI.exe" class="btn-exe" target="_blank"><?= $t['btn_exe'] ?></a>
             </div>
         </div>
     </div>
 
     <!-- HATA BİLDİRİM PANELİ -->
     <div class="bug-report-panel">
-        <h2>🛠 Hata / Sorun Bildir</h2>
-        <p style="color: #8a8a93; font-size: 0.85rem; margin-bottom: 15px;">Uygulamada veya formatta bir hata ile karşılaştıysan bize bildirebilirsin:</p>
+        <h2><?= $t['bug_title'] ?></h2>
+        <p style="color: #8a8a93; font-size: 0.85rem; margin-bottom: 15px;"><?= $t['bug_desc'] ?></p>
         <form action="" method="POST">
             <input type="hidden" name="action" value="report_bug">
-            <input type="text" name="reporter_name" placeholder="Adın veya Rumuzun (İsteğe bağlı)">
-            <textarea name="bug_description" placeholder="Yaşadığın sorunu veya hatayı detaylı anlat..." required></textarea>
-            <button type="submit" class="btn-submit">Bildirimi Gönder</button>
+            <input type="text" name="reporter_name" placeholder="<?= $t['bug_name'] ?>">
+            <textarea name="bug_description" placeholder="<?= $t['bug_text'] ?>" required></textarea>
+            <button type="submit" class="btn-submit"><?= $t['bug_btn'] ?></button>
         </form>
         <?php if ($bugMessage && isset($_POST['action']) && $_POST['action'] === 'report_bug'): ?>
             <div class="bug-msg"><?= htmlspecialchars($bugMessage) ?></div>
@@ -243,15 +323,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     </div>
 
     <footer>
-        &copy; <?= date('Y') ?> Tıla Software. All rights reserved.
+        &copy; <?= date('Y') ?> Tıla Software. <?= $t['footer'] ?>
     </footer>
 </div>
 
 <script>
-function updateFileName(input) {
+function updateFileName(input, prefix) {
     var label = document.getElementById('fileLabel');
     if (input.files && input.files[0]) {
-        label.innerHTML = "📄 " + input.files[0].name;
+        label.innerHTML = prefix + input.files[0].name;
         label.style.borderColor = "#28a745";
         label.style.color = "#fff";
     }
