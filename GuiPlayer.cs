@@ -30,11 +30,13 @@ namespace TilaAudioGui
         private RoundedButton btnPlayPause;
         private RoundedButton btnStop;
 
+        // Özellik Paneli Elemanları
         private Label lblSidebarTitle;
         private Label lblPropName;
         private Label lblPropType;
         private Label lblPropAlgo;
         private RoundedButton btnToggleLoop;
+        private RoundedButton btnLangSwitch;
 
         private Timer timerProgress;
         private Timer timerAnim;
@@ -43,14 +45,17 @@ namespace TilaAudioGui
         private bool isVideoMode = false;
         private bool isUserSeeking = false;
         private bool isLoopEnabled = false;
+        private string currentLang = "tr"; // Varsayılan dil Türkçe
         private int totalSeconds = 0;
         private int currentSeconds = 0;
         private float animAngle = 0;
         private string tempMediaFile = "";
+        private string loadedFileName = "";
 
         public GuiPlayer()
         {
             InitializeComponent();
+            UpdateTexts();
             this.FormClosing += GuiPlayer_FormClosing;
         }
 
@@ -69,11 +74,11 @@ namespace TilaAudioGui
                     if (wmp != null)
                     {
                         wmp.controls.stop();
-                        wmp.URL = ""; // WMP dosya kilidini kaldırır
+                        wmp.URL = "";
                     }
                 }
 
-                System.Threading.Thread.Sleep(50); // Kilidin serbest kalması için kısa bekleme
+                System.Threading.Thread.Sleep(50);
 
                 if (!string.IsNullOrEmpty(tempMediaFile) && File.Exists(tempMediaFile))
                 {
@@ -85,7 +90,6 @@ namespace TilaAudioGui
 
         private void InitializeComponent()
         {
-            this.Text = "Tıla Medya Oynatıcı & Özellikler";
             this.Size = new Size(740, 580);
             this.BackColor = Color.FromArgb(18, 18, 22);
             this.ForeColor = Color.White;
@@ -140,7 +144,6 @@ namespace TilaAudioGui
 
             lblSidebarTitle = new Label()
             {
-                Text = "📊 Medya Özellikleri",
                 Location = new Point(12, 12),
                 Size = new Size(180, 25),
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
@@ -149,7 +152,6 @@ namespace TilaAudioGui
 
             lblPropName = new Label()
             {
-                Text = "Dosya: Bekleniyor...",
                 Location = new Point(12, 55),
                 Size = new Size(180, 55),
                 Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
@@ -158,7 +160,6 @@ namespace TilaAudioGui
 
             lblPropType = new Label()
             {
-                Text = "Biçim: Yok",
                 Location = new Point(12, 125),
                 Size = new Size(180, 25),
                 Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
@@ -167,7 +168,6 @@ namespace TilaAudioGui
 
             lblPropAlgo = new Label()
             {
-                Text = "Şifreleme: XOR (0x5A)",
                 Location = new Point(12, 165),
                 Size = new Size(180, 25),
                 Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
@@ -176,8 +176,7 @@ namespace TilaAudioGui
 
             btnToggleLoop = new RoundedButton()
             {
-                Text = "🔁 Döngü: Kapalı",
-                Location = new Point(12, 410),
+                Location = new Point(12, 355),
                 Size = new Size(180, 42),
                 BackColor = Color.FromArgb(45, 45, 55),
                 ForeColor = Color.White,
@@ -186,15 +185,26 @@ namespace TilaAudioGui
             };
             btnToggleLoop.Click += BtnToggleLoop_Click;
 
+            btnLangSwitch = new RoundedButton()
+            {
+                Location = new Point(12, 410),
+                Size = new Size(180, 42),
+                BackColor = Color.FromArgb(0, 120, 212),
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                BorderRadius = 15
+            };
+            btnLangSwitch.Click += BtnLangSwitch_Click;
+
             pnlSidebar.Controls.Add(lblSidebarTitle);
             pnlSidebar.Controls.Add(lblPropName);
             pnlSidebar.Controls.Add(lblPropType);
             pnlSidebar.Controls.Add(lblPropAlgo);
             pnlSidebar.Controls.Add(btnToggleLoop);
+            pnlSidebar.Controls.Add(btnLangSwitch);
 
             lblTitle = new Label()
             {
-                Text = "Medya Seçilmedi",
                 Location = new Point(20, 280),
                 Size = new Size(464, 25),
                 Font = new Font("Segoe UI", 11, FontStyle.Bold),
@@ -203,7 +213,6 @@ namespace TilaAudioGui
 
             lblSubTitle = new Label()
             {
-                Text = "Tıla Medya Biçimi (.tls / .tlv)",
                 Location = new Point(20, 308),
                 Size = new Size(464, 20),
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
@@ -236,7 +245,6 @@ namespace TilaAudioGui
 
             btnOpen = new RoundedButton()
             {
-                Text = "📂 Aç",
                 Location = new Point(15, 420),
                 Size = new Size(70, 42),
                 BackColor = Color.FromArgb(40, 40, 50),
@@ -247,7 +255,6 @@ namespace TilaAudioGui
 
             btnConvert = new RoundedButton()
             {
-                Text = "🔄 Dönüştür",
                 Location = new Point(90, 420),
                 Size = new Size(95, 42),
                 BackColor = Color.FromArgb(0, 120, 212),
@@ -258,7 +265,6 @@ namespace TilaAudioGui
 
             btnPlayPause = new RoundedButton()
             {
-                Text = "▶ Oynat",
                 Location = new Point(190, 415),
                 Size = new Size(115, 52),
                 BackColor = Color.FromArgb(40, 160, 80),
@@ -270,7 +276,6 @@ namespace TilaAudioGui
 
             btnStop = new RoundedButton()
             {
-                Text = "⏹ Durdur",
                 Location = new Point(310, 420),
                 Size = new Size(80, 42),
                 BackColor = Color.FromArgb(190, 50, 50),
@@ -324,17 +329,59 @@ namespace TilaAudioGui
             this.Controls.Add(tbVolume);
         }
 
+        private void UpdateTexts()
+        {
+            if (currentLang == "tr")
+            {
+                this.Text = "Tıla Medya Oynatıcı & Özellikler";
+                lblSidebarTitle.Text = "📊 Medya Özellikleri";
+                lblPropName.Text = string.IsNullOrEmpty(loadedFileName) ? "Dosya: Bekleniyor..." : "Dosya: " + loadedFileName;
+                lblPropType.Text = isVideoMode ? "Biçim: Tıla Video (.tlv)" : (string.IsNullOrEmpty(loadedFileName) ? "Biçim: Yok" : "Biçim: Tıla Ses (.tls)");
+                lblPropAlgo.Text = "Şifreleme: XOR (0x5A)";
+                btnToggleLoop.Text = isLoopEnabled ? "🔁 Döngü: Açık" : "🔁 Döngü: Kapalı";
+                btnLangSwitch.Text = "🌐 Dil: TR (EN Yap)";
+                lblTitle.Text = string.IsNullOrEmpty(loadedFileName) ? "Medya Seçilmedi" : Path.GetFileNameWithoutExtension(loadedFileName);
+                lblSubTitle.Text = isVideoMode ? "Tıla Video Dosyası (.tlv)" : "Tıla Ses Dosyası (.tls)";
+                btnOpen.Text = "📂 Aç";
+                btnConvert.Text = "🔄 Dönüştür";
+                btnPlayPause.Text = isPlaying ? "⏸ Duraklat" : "▶ Oynat";
+                btnStop.Text = "⏹ Durdur";
+            }
+            else
+            {
+                this.Text = "Tila Media Player & Properties";
+                lblSidebarTitle.Text = "📊 Media Properties";
+                lblPropName.Text = string.IsNullOrEmpty(loadedFileName) ? "File: Waiting..." : "File: " + loadedFileName;
+                lblPropType.Text = isVideoMode ? "Format: Tila Video (.tlv)" : (string.IsNullOrEmpty(loadedFileName) ? "Format: None" : "Format: Tila Audio (.tls)");
+                lblPropAlgo.Text = "Encryption: XOR (0x5A)";
+                btnToggleLoop.Text = isLoopEnabled ? "🔁 Loop: On" : "🔁 Loop: Off";
+                btnLangSwitch.Text = "🌐 Lang: EN (Switch to TR)";
+                lblTitle.Text = string.IsNullOrEmpty(loadedFileName) ? "Media Not Selected" : Path.GetFileNameWithoutExtension(loadedFileName);
+                lblSubTitle.Text = isVideoMode ? "Tila Video File (.tlv)" : "Tila Audio File (.tls)";
+                btnOpen.Text = "📂 Open";
+                btnConvert.Text = "🔄 Convert";
+                btnPlayPause.Text = isPlaying ? "⏸ Pause" : "▶ Play";
+                btnStop.Text = "⏹ Stop";
+            }
+        }
+
+        private void BtnLangSwitch_Click(object sender, EventArgs e)
+        {
+            currentLang = (currentLang == "tr") ? "en" : "tr";
+            UpdateTexts();
+        }
+
         private void BtnToggleLoop_Click(object sender, EventArgs e)
         {
             isLoopEnabled = !isLoopEnabled;
             if (isLoopEnabled)
             {
-                btnToggleLoop.Text = "🔁 Döngü: Açık";
+                btnToggleLoop.Text = (currentLang == "tr") ? "🔁 Döngü: Açık" : "🔁 Loop: On";
                 btnToggleLoop.BackColor = Color.FromArgb(0, 120, 212);
             }
             else
             {
-                btnToggleLoop.Text = "🔁 Döngü: Kapalı";
+                btnToggleLoop.Text = (currentLang == "tr") ? "🔁 Döngü: Kapalı" : "🔁 Loop: Off";
                 btnToggleLoop.BackColor = Color.FromArgb(45, 45, 55);
             }
         }
@@ -342,8 +389,8 @@ namespace TilaAudioGui
         private void BtnConvert_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = "Dönüştürülecek Medya Dosyasını Seçin";
-            ofd.Filter = "Tüm Desteklenenler|*.mp3;*.wav;*.mp4;*.jpg;*.png|Ses Dosyaları (*.mp3;*.wav)|*.mp3;*.wav|Video ve Resim (*.mp4;*.jpg;*.png)|*.mp4;*.jpg;*.png";
+            ofd.Title = (currentLang == "tr") ? "Dönüştürülecek Medya Dosyasını Seçin" : "Select Media File to Convert";
+            ofd.Filter = (currentLang == "tr") ? "Tüm Desteklenenler|*.mp3;*.wav;*.mp4;*.jpg;*.png|Ses Dosyaları (*.mp3;*.wav)|*.mp3;*.wav|Video ve Resim (*.mp4;*.jpg;*.png)|*.mp4;*.jpg;*.png" : "All Supported|*.mp3;*.wav;*.mp4;*.jpg;*.png|Audio Files (*.mp3;*.wav)|*.mp3;*.wav|Video and Image (*.mp4;*.jpg;*.png)|*.mp4;*.jpg;*.png";
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
@@ -353,13 +400,13 @@ namespace TilaAudioGui
                 SaveFileDialog sfd = new SaveFileDialog();
                 if (isAudio)
                 {
-                    sfd.Title = ".TLS (Ses) Olarak Kaydet";
+                    sfd.Title = (currentLang == "tr") ? ".TLS (Ses) Olarak Kaydet" : "Save as .TLS (Audio)";
                     sfd.Filter = "Tıla Ses Dosyası (*.tls)|*.tls";
                     sfd.FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".tls";
                 }
                 else
                 {
-                    sfd.Title = ".TLV (Video) Olarak Kaydet";
+                    sfd.Title = (currentLang == "tr") ? ".TLV (Video) Olarak Kaydet" : "Save as .TLV (Video)";
                     sfd.Filter = "Tıla Video Dosyası (*.tlv)|*.tlv";
                     sfd.FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".tlv";
                 }
@@ -371,17 +418,17 @@ namespace TilaAudioGui
                         if (isAudio)
                         {
                             ConvertFileToTls(ofd.FileName, sfd.FileName);
-                            MessageBox.Show("Ses dosyası başarıyla .tls formatına dönüştürüldü!", "Tamamlandı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show((currentLang == "tr") ? "Ses dosyası başarıyla .tls formatına dönüştürüldü!" : "Audio file successfully converted to .tls format!", (currentLang == "tr") ? "Tamamlandı" : "Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                         else
                         {
                             ConvertFileToTlv(ofd.FileName, sfd.FileName);
-                            MessageBox.Show("Video/Resim dosyası başarıyla .tlv formatına dönüştürüldü!", "Tamamlandı", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show((currentLang == "tr") ? "Video/Resim dosyası başarıyla .tlv formatına dönüştürüldü!" : "Video/Image file successfully converted to .tlv format!", (currentLang == "tr") ? "Tamamlandı" : "Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Dönüştürme hatası: " + ex.Message, "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(((currentLang == "tr") ? "Dönüştürme hatası: " : "Conversion error: ") + ex.Message, (currentLang == "tr") ? "Hata" : "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
@@ -512,7 +559,6 @@ namespace TilaAudioGui
 
         private void BtnOpen_Click(object sender, EventArgs e)
         {
-            // Önceki medyayı tamamen durdurup temizle ki donma yaşanmasın
             StopPlayback();
             CleanupTempFile();
 
@@ -524,12 +570,12 @@ namespace TilaAudioGui
                 try
                 {
                     FileInfo fi = new FileInfo(ofd.FileName);
-                    lblPropName.Text = "Dosya: " + fi.Name;
+                    loadedFileName = fi.Name;
 
                     byte[] fileBytes = File.ReadAllBytes(ofd.FileName);
                     if (fileBytes.Length < 16)
                     {
-                        MessageBox.Show("Dosya yapısı bozuk!", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show((currentLang == "tr") ? "Dosya yapısı bozuk!" : "File structure is corrupted!", (currentLang == "tr") ? "Hata" : "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
@@ -540,8 +586,6 @@ namespace TilaAudioGui
                         isVideoMode = false;
                         pnlVideoHolder.Visible = false;
                         lblCenterIcon.Visible = true;
-                        lblSubTitle.Text = "Tıla Ses Dosyası (.tls)";
-                        lblPropType.Text = "Biçim: Tıla Ses (.tls)";
                         LoadTlsAudio(fileBytes);
                     }
                     else if (magic == "TLV1")
@@ -549,17 +593,15 @@ namespace TilaAudioGui
                         isVideoMode = true;
                         lblCenterIcon.Visible = false;
                         pnlVideoHolder.Visible = true;
-                        lblSubTitle.Text = "Tıla Video Dosyası (.tlv)";
-                        lblPropType.Text = "Biçim: Tıla Video (.tlv)";
                         LoadTlvVideo(fileBytes);
                     }
                     else
                     {
-                        MessageBox.Show("Geçersiz Tıla medya dosyası!", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show((currentLang == "tr") ? "Geçersiz Tıla medya dosyası!" : "Invalid Tila media file!", (currentLang == "tr") ? "Hata" : "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
-                    lblTitle.Text = Path.GetFileNameWithoutExtension(ofd.FileName);
+                    UpdateTexts();
                     btnPlayPause.Enabled = true;
                     btnStop.Enabled = true;
 
@@ -663,7 +705,7 @@ namespace TilaAudioGui
 
             ApplyVolume();
             isPlaying = true;
-            btnPlayPause.Text = "⏸ Duraklat";
+            btnPlayPause.Text = (currentLang == "tr") ? "⏸ Duraklat" : "⏸ Pause";
             timerProgress.Start();
             if (!isVideoMode) timerAnim.Start();
         }
@@ -688,7 +730,7 @@ namespace TilaAudioGui
             timerAnim.Stop();
             currentSeconds = 0;
             tbProgress.Value = 0;
-            btnPlayPause.Text = "▶ Oynat";
+            btnPlayPause.Text = (currentLang == "tr") ? "▶ Oynat" : "▶ Play";
             UpdateTimerLabel();
             pnlMediaContainer.Invalidate();
         }
@@ -711,7 +753,7 @@ namespace TilaAudioGui
                 }
 
                 isPlaying = false;
-                btnPlayPause.Text = "▶ Oynat";
+                btnPlayPause.Text = (currentLang == "tr") ? "▶ Oynat" : "▶ Play";
                 timerProgress.Stop();
                 timerAnim.Stop();
             }
