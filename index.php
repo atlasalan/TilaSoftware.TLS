@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Dil seçimi yönetimi
 if (isset($_GET['lang']) && in_array($_GET['lang'], ['tr', 'en'])) {
     $_SESSION['lang'] = $_GET['lang'];
 }
@@ -8,58 +9,56 @@ $lang = $_SESSION['lang'] ?? 'tr';
 
 $translations = [
     'tr' => [
-        'title' => 'Tıla Software TLS3 & TLV2 Engine',
-        'subtitle' => 'Music & Video Format and Player',
-        'formats_title' => 'Tıla Medya Biçimleri',
-        'formats_desc' => '<b>.TLS</b> (Tıla Audio) ve <b>.TLV</b> (Tıla Video), Tıla Software tarafından geliştirilen bağımsız ikili medya formatlarıdır.',
-        'feat_1' => '<b>Çoklu Format Desteği:</b> Ses (.mp3, .wav, .aac, .flac, .ogg, .m4a) ve Video (.mp4, .avi, .mkv, .mov, .wmv, .webm).',
-        'feat_2' => '<b>Kusursuz Oynatma:</b> Her iki format da tek bir **Tıla Medya Oynatıcı** uygulamasıyla kesintisiz çalışır.',
-        'feat_3' => '<b>Gelişmiş Başlık Koruması:</b> <code>TLS3</code> ve <code>TLV2</code> doğrulamalı ikili şifreleme.',
-        'feat_4' => '<b>Güvenli Temizlik:</b> İndirilen medya dosyaları sunucuda iz bırakmadan anında temizlenir.',
-        'converter_title' => 'Medya Dönüştürücü',
-        'converter_desc' => 'Dönüştürmek istediğiniz format türünü seçin:',
+        'title' => 'Tıla Software - Resmi TLS & TLV Medya Portalı',
+        'subtitle' => 'Müzik ve Video Formatı Dönüştürme & İndirme Merkezi',
+        'formats_title' => 'Tıla Medya Biçimi Hakkında',
+        'formats_desc' => '<b>.TLS</b> (Tıla Audio) ve <b>.TLV</b> (Tıla Video), Tıla Software tarafından geliştirilen bağımsız ikili (binary) medya formatlarıdır.',
+        'feat_1' => '<b>Geniş Format Desteği:</b> Ses (MP3, WAV, AAC, FLAC, OGG) ve Video (MP4, AVI, MKV, MOV, WMV).',
+        'feat_2' => '<b>Yerli Oynatıcı:</b> Formatlar doğrudan Tıla Medya Oynatıcı uygulaması ile tam uyumludur.',
+        'feat_3' => '<b>Başlık Şifrelemesi:</b> TLS3 ve TLV2 ikili başlık doğrulaması.',
+        'feat_4' => '<b>Geçici Depolama:</b> Sunucuya yüklenen dosyalar işlem sonrası anında temizlenir.',
+        'converter_title' => 'Çevrimiçi Dönüştürme Motoru',
+        'converter_desc' => 'Dönüştürülecek hedef formatı seçin:',
         'opt_tls' => '🎵 .TLS (Ses Formatları: MP3, WAV, AAC, FLAC, OGG, M4A)',
         'opt_tlv' => '🎬 .TLV (Video & Resim: MP4, AVI, MKV, MOV, WMV, WEBM, JPG, PNG, GIF)',
-        'file_label' => '📁 Medya Dosyası Seçin',
-        'file_selected' => '📄 Dosya seçildi: ',
-        'btn_convert' => 'Dönüştür ve İndir',
-        'btn_download' => '⬇ İndir',
-        'btn_exe' => '💻 Tıla Medya Oynatıcı\'yı İndir (.exe)',
-        'bug_title' => '🛠 Hata / Sorun Bildir',
-        'bug_desc' => 'Uygulamada veya formatta bir hata ile karşılaştıysan bize bildirebilirsin:',
-        'bug_name' => 'Adın veya Rumuzun (İsteğe bağlı)',
-        'bug_text' => 'Yaşadığın sorunu veya hatayı detaylı anlat...',
-        'bug_btn' => 'Bildirimi Gönder',
+        'file_label' => 'Dönüştürülecek Dosyayı Seçin:',
+        'btn_convert' => 'Dönüştürmeyi Başlat',
+        'btn_download' => '💾 Oluşturulan Dosyayı İndir',
+        'btn_exe' => '🖫 Tıla Medya Oynatıcı İndir (.exe)',
+        'bug_title' => 'Hata / Geri Bildirim Formu',
+        'bug_desc' => 'Sistemde karşılaştığınız teknik sorunları bildirebilirsiniz:',
+        'bug_name' => 'Adınız / Rumuzunuz:',
+        'bug_text' => 'Sorun Açıklaması:',
+        'bug_btn' => 'Raporu Gönder',
         'footer' => 'Tüm hakları saklıdır.',
-        'success_conv' => 'Dosyanız Tıla formatına başarıyla dönüştürüldü!',
-        'success_bug' => 'Hata bildirimin başarıyla gönderildi. Teşekkürler!'
+        'success_conv' => 'İşlem Başarılı: Dosyanız dönüştürüldü.',
+        'success_bug' => 'Bildiriminiz sistem yöneticisine iletildi.'
     ],
     'en' => [
-        'title' => 'Tila Software TLS3 & TLV2 Engine',
-        'subtitle' => 'Music & Video Format and Player',
-        'formats_title' => 'Tila Media Formats',
-        'formats_desc' => '<b>.TLS</b> (Tila Audio) and <b>.TLV</b> (Tila Video) are independent binary media formats developed by Tila Software.',
-        'feat_1' => '<b>Multi-Format Support:</b> Audio (.mp3, .wav, .aac, .flac, .ogg, .m4a) and Video (.mp4, .avi, .mkv, .mov, .wmv, .webm).',
-        'feat_2' => '<b>Flawless Playback:</b> Both formats run seamlessly on the single <b>Tila Media Player</b> app.',
-        'feat_3' => '<b>Advanced Header Protection:</b> Binary encryption validated with <code>TLS3</code> and <code>TLV2</code> headers.',
-        'feat_4' => '<b>Secure Cleanup:</b> Downloaded media files are instantly wiped from the server leaving no trace.',
-        'converter_title' => 'Media Converter',
-        'converter_desc' => 'Select target conversion format:',
+        'title' => 'Tila Software - Official TLS & TLV Media Portal',
+        'subtitle' => 'Music & Video Format Conversion & Download Center',
+        'formats_title' => 'About Tila Media Formats',
+        'formats_desc' => '<b>.TLS</b> (Tila Audio) and <b>.TLV</b> (Tila Video) are proprietary binary media container formats developed by Tila Software.',
+        'feat_1' => '<b>Wide Format Support:</b> Audio (MP3, WAV, AAC, FLAC, OGG) and Video (MP4, AVI, MKV, MOV, WMV).',
+        'feat_2' => '<b>Native Player:</b> Formats are fully compatible with Tila Media Player.',
+        'feat_3' => '<b>Header Encryption:</b> TLS3 & TLV2 binary header validation.',
+        'feat_4' => '<b>Temporary Storage:</b> Files uploaded are immediately wiped post-conversion.',
+        'converter_title' => 'Online Conversion Engine',
+        'converter_desc' => 'Select target output format:',
         'opt_tls' => '🎵 .TLS (Audio Formats: MP3, WAV, AAC, FLAC, OGG, M4A)',
         'opt_tlv' => '🎬 .TLV (Video & Images: MP4, AVI, MKV, MOV, WMV, WEBM, JPG, PNG, GIF)',
-        'file_label' => '📁 Choose Media File',
-        'file_selected' => '📄 File selected: ',
-        'btn_convert' => 'Convert & Download',
-        'btn_download' => '⬇ Download',
-        'btn_exe' => '💻 Download Tila Media Player (.exe)',
-        'bug_title' => '🛠 Report a Bug / Issue',
-        'bug_desc' => 'If you encounter any bugs in the app or format, let us know:',
-        'bug_name' => 'Your Name or Alias (Optional)',
-        'bug_text' => 'Describe the issue or error in detail...',
-        'bug_btn' => 'Send Report',
+        'file_label' => 'Select Source File:',
+        'btn_convert' => 'Start Conversion',
+        'btn_download' => '💾 Download Converted File',
+        'btn_exe' => '🖫 Download Tila Media Player (.exe)',
+        'bug_title' => 'Bug / Issue Report Form',
+        'bug_desc' => 'Report any technical issues encountered during usage:',
+        'bug_name' => 'Your Name / Alias:',
+        'bug_text' => 'Issue Description:',
+        'bug_btn' => 'Submit Report',
         'footer' => 'All rights reserved.',
-        'success_conv' => 'Your file has been successfully converted into Tila format!',
-        'success_bug' => 'Your bug report has been successfully sent. Thanks!'
+        'success_conv' => 'Success: Your file has been converted.',
+        'success_bug' => 'Report submitted to system administrator.'
     ]
 ];
 
@@ -67,7 +66,7 @@ $t = $translations[$lang];
 $uploadDir = __DIR__ . '/uploads/';
 $reportsFile = __DIR__ . '/reports.json';
 
-// 1. İNDİRME MANTIĞI
+// İNDİRME MANTIĞI
 if (isset($_GET['download'])) {
     $file = basename($_GET['download']);
     $filePath = $uploadDir . $file;
@@ -91,17 +90,17 @@ if (isset($_GET['download'])) {
 
         exit;
     } else {
-        die("Hata: Dosya bulunamadı veya silinmiş.");
+        die("Hata: Dosya bulunamadı.");
     }
 }
 
-// 2. DÖNÜŞTÜRME MANTIĞI (.TLS ve .TLV)
+// DÖNÜŞTÜRME MANTIĞI
 $message = "";
 $downloadFile = "";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'convert') {
     if (!isset($_FILES['media_file']) || $_FILES['media_file']['error'] !== UPLOAD_ERR_OK) {
-        $message = "Dosya yüklenirken bir sorun oluştu.";
+        $message = "Hata: Dosya yükleme başarısız.";
     } else {
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0775, true);
@@ -115,7 +114,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $rawBytes = file_get_contents($tmpPath);
         $dataLength = strlen($rawBytes);
 
-        // XOR Şifreleme (0x5A)
         $key = 0x5A;
         $pcmData = $rawBytes;
         for ($i = 0; $i < $dataLength; $i++) {
@@ -145,12 +143,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $message = $t['success_conv'];
             $downloadFile = $outputFile;
         } else {
-            $message = "Hata: Dosya oluşturulamadı.";
+            $message = "Hata: Dosya işlenemedi.";
         }
     }
 }
 
-// 3. HATA BİLDİRİM MANTIĞI
+// HATA BİLDİRİMİ
 $bugMessage = "";
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'report_bug') {
     $reporterName = trim($_POST['reporter_name'] ?? 'Anonim');
@@ -170,8 +168,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         file_put_contents($reportsFile, json_encode($reports, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         $bugMessage = $t['success_bug'];
-    } else {
-        $bugMessage = "Lütfen hata açıklamasını boş bırakma.";
     }
 }
 ?>
@@ -180,139 +176,163 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 <html lang="<?= $lang ?>">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $t['title'] ?></title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f0f12; color: #e1e1e6; line-height: 1.6; padding: 40px 20px; }
-        .container { max-width: 1100px; margin: 0 auto; position: relative; }
-        .lang-switcher { position: absolute; top: 0; right: 0; display: flex; gap: 8px; }
-        .lang-switcher a { background: #18181c; color: #8a8a93; border: 1px solid #282830; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold; transition: 0.2s; }
-        .lang-switcher a.active, .lang-switcher a:hover { background: #0078d4; color: #fff; border-color: #0078d4; }
-        header { text-align: center; margin-bottom: 40px; margin-top: 20px; }
-        header h1 { font-size: 2.2rem; color: #0078d4; margin-bottom: 8px; }
-        header p { color: #8a8a93; font-size: 1.05rem; }
-        .layout { display: flex; flex-wrap: wrap; gap: 30px; margin-bottom: 30px; }
-        .info-panel { flex: 1; min-width: 320px; background: #18181c; border-radius: 12px; padding: 30px; border: 1px solid #282830; }
-        .info-panel h2 { color: #fff; font-size: 1.4rem; margin-bottom: 15px; border-bottom: 2px solid #0078d4; padding-bottom: 8px; display: inline-block; }
-        .info-panel p { color: #b3b3bc; margin-bottom: 15px; font-size: 0.95rem; }
-        .feature-list { list-style: none; margin: 20px 0; }
-        .feature-list li { margin-bottom: 12px; padding-left: 25px; position: relative; color: #d0d0d8; font-size: 0.95rem; }
-        .feature-list li::before { content: "✔"; position: absolute; left: 0; color: #0078d4; font-weight: bold; }
-        .convert-panel { flex: 1; min-width: 320px; background: #18181c; border-radius: 12px; padding: 30px; border: 1px solid #282830; text-align: center; display: flex; flex-direction: column; justify-content: space-between; }
-        .convert-panel h2 { color: #fff; font-size: 1.4rem; margin-bottom: 10px; }
-        select { width: 100%; padding: 10px; background: #222228; color: #fff; border: 1px solid #0078d4; border-radius: 6px; margin-bottom: 15px; }
-        .file-input-wrapper { margin: 15px 0; }
-        input[type="file"] { display: none; }
-        .file-label { display: block; background: #222228; border: 2px dashed #0078d4; padding: 20px; border-radius: 10px; cursor: pointer; transition: 0.3s; color: #aaa; }
-        .file-label:hover { background: #2a2a32; color: #fff; }
-        .btn-submit { background: #0078d4; color: #fff; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-size: 1rem; font-weight: bold; width: 100%; transition: 0.2s; }
-        .btn-submit:hover { background: #005a9e; }
-        .status-msg { margin-top: 15px; padding: 10px; border-radius: 6px; background: #1c2b20; color: #00ff7f; font-size: 0.85rem; }
-        .btn-download { display: inline-block; background: #28a745; color: #fff; text-decoration: none; padding: 12px 24px; border-radius: 8px; margin-top: 10px; font-weight: bold; transition: 0.2s; width: 100%; }
-        .btn-download:hover { background: #218838; }
-        .app-download-box { margin-top: 25px; padding-top: 20px; border-top: 1px solid #282830; text-align: center; }
-        .btn-exe { display: inline-block; background: #2d2d30; color: #fff; border: 1px solid #0078d4; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; transition: 0.2s; width: 100%; }
-        .btn-exe:hover { background: #0078d4; }
-        .bug-report-panel { background: #18181c; border-radius: 12px; padding: 30px; border: 1px solid #282830; margin-top: 30px; }
-        .bug-report-panel h2 { color: #fff; font-size: 1.4rem; margin-bottom: 10px; }
-        .bug-report-panel input[type="text"], .bug-report-panel textarea { width: 100%; padding: 10px; margin-bottom: 15px; background: #222228; color: #fff; border: 1px solid #0078d4; border-radius: 6px; font-family: inherit; }
-        .bug-report-panel textarea { height: 100px; resize: none; }
-        .bug-msg { margin-top: 15px; padding: 10px; border-radius: 6px; background: #1c2b20; color: #00ff7f; font-size: 0.85rem; }
-        footer { text-align: center; margin-top: 50px; color: #555560; font-size: 0.85rem; }
+        body { font-family: Tahoma, Verdana, Arial, sans-serif; font-size: 11px; background-color: #f2f2f2; color: #000; margin: 20px; }
+        a { color: #003399; text-decoration: underline; }
+        a:hover { color: #ff0000; }
+        
+        .main-box { max-width: 820px; margin: 0 auto; background: #ffffff; border: 1px solid #7f9db9; padding: 15px; }
+        
+        /* Header */
+        .header-table { width: 100%; border-bottom: 2px solid #003366; padding-bottom: 8px; margin-bottom: 15px; }
+        .header-title { font-size: 18px; font-weight: bold; color: #003366; }
+        .header-sub { font-size: 11px; color: #555; }
+        .lang-bar { text-align: right; font-size: 11px; }
+
+        /* Classic Section Boxes */
+        .section-box { border: 1px solid #a6c2d7; margin-bottom: 15px; background: #ffffff; }
+        .section-header { background: #e3efff; color: #003366; font-weight: bold; padding: 5px 8px; border-bottom: 1px solid #a6c2d7; font-size: 12px; }
+        .section-body { padding: 10px; }
+
+        /* Form Table Layout */
+        table.form-table { width: 100%; border-collapse: collapse; }
+        table.form-table td { padding: 5px; vertical-align: top; }
+        
+        select, input[type="text"], textarea, input[type="file"] { font-family: Tahoma, Arial; font-size: 11px; border: 1px solid #7f9db9; padding: 3px; background: #fff; }
+        select { width: 100%; }
+        textarea { width: 98%; height: 60px; }
+
+        /* ImgBurn Style Classic Buttons */
+        .btn-classic { background: #e1e1e1; border: 1px solid #707070; color: #000; font-family: Tahoma; font-size: 11px; padding: 4px 12px; cursor: pointer; font-weight: bold; }
+        .btn-classic:hover { background: #e5f1fb; border-color: #0078d7; }
+        
+        .btn-download-box { background: #e6ffe6; border: 1px solid #009900; padding: 8px; margin-top: 10px; text-align: center; }
+        .btn-download-link { font-weight: bold; color: #006600; text-decoration: none; font-size: 12px; }
+
+        .exe-box { background: #fff8e6; border: 1px solid #e6b800; padding: 8px; text-align: center; margin-top: 10px; }
+        
+        /* Status Alerts */
+        .msg-ok { background: #e8f8e8; border: 1px solid #4caf50; color: #2e7d32; padding: 6px; margin-top: 8px; font-weight: bold; }
+
+        ul.feat-list { margin: 5px 0 5px 20px; padding: 0; }
+        ul.feat-list li { margin-bottom: 4px; }
+        
+        footer { text-align: center; margin-top: 20px; font-size: 10px; color: #666; border-top: 1px dashed #ccc; padding-top: 8px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="lang-switcher">
-        <a href="?lang=tr" class="<?= $lang === 'tr' ? 'active' : '' ?>">TR</a>
-        <a href="?lang=en" class="<?= $lang === 'en' ? 'active' : '' ?>">EN</a>
-    </div>
+<div class="main-box">
+    <!-- HEADER -->
+    <table class="header-table">
+        <tr>
+            <td>
+                <div class="header-title">Tıla Software</div>
+                <div class="header-sub"><?= $t['subtitle'] ?></div>
+            </td>
+            <td class="lang-bar">
+                <b>Language / Dil:</b> 
+                [<a href="?lang=tr">Türkçe</a>] 
+                [<a href="?lang=en">English</a>]
+            </td>
+        </tr>
+    </table>
 
-    <header>
-        <h1>Tıla Software TLS3 & TLV2 Engine</h1>
-        <p><?= $t['subtitle'] ?></p>
-    </header>
-
-    <div class="layout">
-        <div class="info-panel">
-            <h2><?= $t['formats_title'] ?></h2>
+    <!-- BİLGİ SEKSİYONU -->
+    <div class="section-box">
+        <div class="section-header"><?= $t['formats_title'] ?></div>
+        <div class="section-body">
             <p><?= $t['formats_desc'] ?></p>
-            <ul class="feature-list">
+            <ul class="feat-list">
                 <li><?= $t['feat_1'] ?></li>
                 <li><?= $t['feat_2'] ?></li>
                 <li><?= $t['feat_3'] ?></li>
                 <li><?= $t['feat_4'] ?></li>
             </ul>
         </div>
+    </div>
 
-        <div class="convert-panel">
-            <div>
-                <h2><?= $t['converter_title'] ?></h2>
-                <p style="color: #8a8a93; font-size: 0.85rem; margin-bottom: 15px;"><?= $t['converter_desc'] ?></p>
+    <!-- DÖNÜŞTÜRÜCÜ SEKSİYONU -->
+    <div class="section-box">
+        <div class="section-header"><?= $t['converter_title'] ?></div>
+        <div class="section-body">
+            <form action="" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="action" value="convert">
+                <table class="form-table">
+                    <tr>
+                        <td style="width: 150px;"><b><?= $t['converter_desc'] ?></b></td>
+                        <td>
+                            <select name="format_type">
+                                <option value="tls"><?= $t['opt_tls'] ?></option>
+                                <option value="tlv"><?= $t['opt_tlv'] ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><b><?= $t['file_label'] ?></b></td>
+                        <td>
+                            <input type="file" name="media_file" required style="width: 100%;">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <button type="submit" class="btn-classic"><?= $t['btn_convert'] ?></button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
 
-                <form action="" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="action" value="convert">
-                    <select name="format_type">
-                        <option value="tls"><?= $t['opt_tls'] ?></option>
-                        <option value="tlv"><?= $t['opt_tlv'] ?></option>
-                    </select>
+            <?php if ($message && isset($_POST['action']) && $_POST['action'] === 'convert'): ?>
+                <div class="msg-ok"><?= htmlspecialchars($message) ?></div>
+            <?php endif; ?>
 
-                    <div class="file-input-wrapper">
-                        <label for="media_file" class="file-label" id="fileLabel">
-                            <?= $t['file_label'] ?>
-                        </label>
-                        <input type="file" name="media_file" id="media_file" required accept="audio/*,video/*,image/*,.mp3,.wav,.aac,.flac,.ogg,.m4a,.mp4,.avi,.mkv,.mov,.wmv,.webm,.jpg,.png,.gif,.bmp" onchange="updateFileName(this, '<?= $t['file_selected'] ?>')">
-                    </div>
+            <?php if ($downloadFile): ?>
+                <div class="btn-download-box">
+                    <a href="?download=<?= urlencode($downloadFile) ?>" class="btn-download-link"><?= $t['btn_download'] ?></a>
+                </div>
+            <?php endif; ?>
 
-                    <button type="submit" class="btn-submit"><?= $t['btn_convert'] ?></button>
-                </form>
-
-                <?php if ($message && isset($_POST['action']) && $_POST['action'] === 'convert'): ?>
-                    <div class="status-msg"><?= htmlspecialchars($message) ?></div>
-                <?php endif; ?>
-
-                <?php if ($downloadFile): ?>
-                    <a href="?download=<?= urlencode($downloadFile) ?>" class="btn-download"><?= $t['btn_download'] ?></a>
-                <?php endif; ?>
-            </div>
-
-            <div class="app-download-box">
-                <a href="https://github.com/atlasalan/TilaSoftware.TLS/raw/main/TilaPlayerGUI.exe" class="btn-exe" target="_blank"><?= $t['btn_exe'] ?></a>
+            <div class="exe-box">
+                <a href="https://github.com/atlasalan/TilaSoftware.TLS/raw/main/TilaPlayerGUI.exe" target="_blank" style="font-weight: bold; text-decoration: none; color: #856404;"><?= $t['btn_exe'] ?></a>
             </div>
         </div>
     </div>
 
-    <div class="bug-report-panel">
-        <h2><?= $t['bug_title'] ?></h2>
-        <p style="color: #8a8a93; font-size: 0.85rem; margin-bottom: 15px;"><?= $t['bug_desc'] ?></p>
-        <form action="" method="POST">
-            <input type="hidden" name="action" value="report_bug">
-            <input type="text" name="reporter_name" placeholder="<?= $t['bug_name'] ?>">
-            <textarea name="bug_description" placeholder="<?= $t['bug_text'] ?>" required></textarea>
-            <button type="submit" class="btn-submit"><?= $t['bug_btn'] ?></button>
-        </form>
-        <?php if ($bugMessage && isset($_POST['action']) && $_POST['action'] === 'report_bug'): ?>
-            <div class="bug-msg"><?= htmlspecialchars($bugMessage) ?></div>
-        <?php endif; ?>
+    <!-- HATA BİLDİRİM SEKSİYONU -->
+    <div class="section-box">
+        <div class="section-header"><?= $t['bug_title'] ?></div>
+        <div class="section-body">
+            <p style="margin-bottom: 8px;"><?= $t['bug_desc'] ?></p>
+            <form action="" method="POST">
+                <input type="hidden" name="action" value="report_bug">
+                <table class="form-table">
+                    <tr>
+                        <td style="width: 150px;"><b><?= $t['bug_name'] ?></b></td>
+                        <td><input type="text" name="reporter_name" style="width: 250px;"></td>
+                    </tr>
+                    <tr>
+                        <td><b><?= $t['bug_text'] ?></b></td>
+                        <td><textarea name="bug_description" required></textarea></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><button type="submit" class="btn-classic"><?= $t['bug_btn'] ?></button></td>
+                    </tr>
+                </table>
+            </form>
+            <?php if ($bugMessage && isset($_POST['action']) && $_POST['action'] === 'report_bug'): ?>
+                <div class="msg-ok"><?= htmlspecialchars($bugMessage) ?></div>
+            <?php endif; ?>
+        </div>
     </div>
 
+    <!-- FOOTER -->
     <footer>
-        &copy; <?= date('Y') ?> Tıla Software. <?= $t['footer'] ?>
+        Copyright &copy; <?= date('Y') ?> Tıla Software. <?= $t['footer'] ?>
     </footer>
 </div>
-
-<script>
-function updateFileName(input, prefix) {
-    var label = document.getElementById('fileLabel');
-    if (input.files && input.files[0]) {
-        label.innerHTML = prefix + input.files[0].name;
-        label.style.borderColor = "#28a745";
-        label.style.color = "#fff";
-    }
-}
-</script>
 
 </body>
 </html>
