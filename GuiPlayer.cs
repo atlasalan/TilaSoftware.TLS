@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace TilaAudioGui
 {
@@ -15,6 +17,9 @@ namespace TilaAudioGui
 
     public class GuiPlayer : Form
     {
+        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+
         private Panel pnlMediaContainer;
         private Panel pnlVideoHolder;
         private Panel pnlSidebar;
@@ -50,16 +55,87 @@ namespace TilaAudioGui
         private int totalSeconds = 0;
         private int currentSeconds = 0;
         private float animAngle = 0;
-        
+
         private string currentTempFile = "";
         private List<string> tempFilesToClean = new List<string>();
         private string loadedFileName = "";
 
-        public GuiPlayer()
+        public GuiPlayer(string startupFile = "")
         {
             InitializeComponent();
             UpdateTexts();
+            SetAppIcon();
             this.FormClosing += GuiPlayer_FormClosing;
+
+            if (!string.IsNullOrEmpty(startupFile) && File.Exists(startupFile))
+            {
+                this.Shown += (s, e) => OpenAndPlayMedia(startupFile);
+            }
+        }
+
+        private void SetAppIcon()
+        {
+            try
+            {
+                string iconPath = Path.Combine(Application.StartupPath, "app.ico");
+                if (File.Exists(iconPath))
+                {
+                    this.Icon = new Icon(iconPath);
+                }
+            }
+            catch { }
+        }
+
+        public static void RegisterFileAssociations()
+{
+    try
+    {
+        string exePath = Application.ExecutablePath;
+        string expectedCmd = "\"" + exePath + "\" \"%1\"";
+
+        // Zaten senin oynatıcıya bağlı mı kontrol et
+        using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"Software\Classes\TilaSoftware.TLS\shell\open\command"))
+        {
+            if (key != null)
+            {
+                string currentVal = key.GetValue("") as string;
+                if (currentVal == expectedCmd)
+                {
+                    // Zaten tam olarak bu exe'ye bağlı, masaüstünü YENİLEME ve çık!
+                    return;
+                }
+            }
+        }
+
+        // Bağlı değilse ilk defa kaydet
+        RegisterExtension(".tls", "TilaSoftware.TLS", "Tıla Ses Dosyası", exePath);
+        RegisterExtension(".tlv", "TilaSoftware.TLV", "Tıla Video Dosyası", exePath);
+
+        // Sadece İLK DEFA kayıt yapıldığında Windows simgelerini yenile
+        SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+    }
+    catch { }
+}
+
+        private static void RegisterExtension(string ext, string progId, string description, string exePath)
+        {
+            using (RegistryKey keyExt = Registry.CurrentUser.CreateSubKey(@"Software\Classes\" + ext))
+            {
+                keyExt.SetValue("", progId);
+            }
+
+            using (RegistryKey keyProg = Registry.CurrentUser.CreateSubKey(@"Software\Classes\" + progId))
+            {
+                keyProg.SetValue("", description);
+                using (RegistryKey keyIcon = keyProg.CreateSubKey("DefaultIcon"))
+                {
+                    keyIcon.SetValue("", "\"" + exePath + "\",0");
+                }
+                using (RegistryKey keyCmd = keyProg.CreateSubKey(@"shell\open\command"))
+                {
+                    keyCmd.SetValue("", "\"" + exePath + "\" \"%1\"");
+                }
+            }
         }
 
         private void GuiPlayer_FormClosing(object sender, FormClosingEventArgs e)
@@ -106,7 +182,6 @@ namespace TilaAudioGui
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
-            this.Icon = new Icon("app.ico");
 
             pnlMediaContainer = new Panel()
             {
@@ -344,7 +419,7 @@ namespace TilaAudioGui
         {
             if (currentLang == "tr")
             {
-                this.Text = "Tıla Medya Oynatıcı";
+                this.Text = "Tıla Medya Oynatıcı & Özellikler";
                 lblSidebarTitle.Text = "📊 Medya Özellikleri";
                 lblPropName.Text = string.IsNullOrEmpty(loadedFileName) ? "Dosya: Bekleniyor..." : "Dosya: " + loadedFileName;
                 lblPropType.Text = isVideoMode ? "Biçim: Tıla Video (.tlv)" : (string.IsNullOrEmpty(loadedFileName) ? "Biçim: Yok" : "Biçim: Tıla Ses (.tls)");
@@ -360,7 +435,7 @@ namespace TilaAudioGui
             }
             else
             {
-                this.Text = "Tila Media Player";
+                this.Text = "Tila Media Player & Properties";
                 lblSidebarTitle.Text = "📊 Media Properties";
                 lblPropName.Text = string.IsNullOrEmpty(loadedFileName) ? "File: Waiting..." : "File: " + loadedFileName;
                 lblPropType.Text = isVideoMode ? "Format: Tila Video (.tlv)" : (string.IsNullOrEmpty(loadedFileName) ? "Format: None" : "Format: Tila Audio (.tls)");
@@ -389,59 +464,56 @@ namespace TilaAudioGui
             UpdateTexts();
         }
 
+        private void OpenAndPlayMedia(string filePath)
+        {
+            try
+            {
+                StopPlayback();
+
+                FileInfo fi = new FileInfo(filePath);
+                loadedFileName = fi.Name;
+
+                byte[] fileBytes = File.ReadAllBytes(filePath);
+                if (fileBytes.Length < 16) return;
+
+                string magic = Encoding.ASCII.GetString(fileBytes, 0, 4);
+
+                if (magic == "TLS3" || magic == "TLS2")
+                {
+                    isVideoMode = false;
+                    pnlVideoHolder.Visible = false;
+                    lblCenterIcon.Visible = true;
+                    LoadTlsMedia(fileBytes);
+                }
+                else if (magic == "TLV2" || magic == "TLV1")
+                {
+                    isVideoMode = true;
+                    lblCenterIcon.Visible = false;
+                    pnlVideoHolder.Visible = true;
+                    LoadTlvMedia(fileBytes, magic);
+                }
+                else
+                {
+                    return;
+                }
+
+                UpdateTexts();
+                btnPlayPause.Enabled = true;
+                btnStop.Enabled = true;
+
+                StartPlayback();
+            }
+            catch { }
+        }
+
         private void BtnOpen_Click(object sender, EventArgs e)
         {
-            StopPlayback();
-
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "Tıla Medya Dosyaları (*.tls;*.tlv)|*.tls;*.tlv";
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
-                try
-                {
-                    FileInfo fi = new FileInfo(ofd.FileName);
-                    loadedFileName = fi.Name;
-
-                    byte[] fileBytes = File.ReadAllBytes(ofd.FileName);
-                    if (fileBytes.Length < 16)
-                    {
-                        MessageBox.Show("Dosya yapısı bozuk!", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-
-                    string magic = Encoding.ASCII.GetString(fileBytes, 0, 4);
-
-                    if (magic == "TLS3" || magic == "TLS2")
-                    {
-                        isVideoMode = false;
-                        pnlVideoHolder.Visible = false;
-                        lblCenterIcon.Visible = true;
-                        LoadTlsMedia(fileBytes);
-                    }
-                    else if (magic == "TLV2" || magic == "TLV1")
-                    {
-                        isVideoMode = true;
-                        lblCenterIcon.Visible = false;
-                        pnlVideoHolder.Visible = true;
-                        LoadTlvMedia(fileBytes, magic);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Geçersiz Tıla medya formatı!", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
-
-                    UpdateTexts();
-                    btnPlayPause.Enabled = true;
-                    btnStop.Enabled = true;
-
-                    StartPlayback();
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Medya yükleme hatası: " + ex.Message);
-                }
+                OpenAndPlayMedia(ofd.FileName);
             }
         }
 
@@ -791,11 +863,14 @@ namespace TilaAudioGui
         }
 
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
+            RegisterFileAssociations();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new GuiPlayer());
+
+            string startupFile = (args != null && args.Length > 0) ? args[0] : "";
+            Application.Run(new GuiPlayer(startupFile));
         }
     }
 
