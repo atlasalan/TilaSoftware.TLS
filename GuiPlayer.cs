@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -30,7 +31,7 @@ namespace TilaAudioGui
         private RoundedButton btnPlayPause;
         private RoundedButton btnStop;
 
-        // Özellik Paneli Elemanları
+        // Özellik Paneli
         private Label lblSidebarTitle;
         private Label lblPropName;
         private Label lblPropType;
@@ -45,11 +46,13 @@ namespace TilaAudioGui
         private bool isVideoMode = false;
         private bool isUserSeeking = false;
         private bool isLoopEnabled = false;
-        private string currentLang = "tr"; // Varsayılan dil Türkçe
+        private string currentLang = "tr";
         private int totalSeconds = 0;
         private int currentSeconds = 0;
         private float animAngle = 0;
-        private string tempMediaFile = "";
+        
+        private string currentTempFile = "";
+        private List<string> tempFilesToClean = new List<string>();
         private string loadedFileName = "";
 
         public GuiPlayer()
@@ -61,31 +64,38 @@ namespace TilaAudioGui
 
         private void GuiPlayer_FormClosing(object sender, FormClosingEventArgs e)
         {
-            CleanupTempFile();
+            SafelyStopPlayer();
+            CleanupAllTempFiles();
         }
 
-        private void CleanupTempFile()
+        private void SafelyStopPlayer()
         {
             try
             {
                 if (axWmpPlayer != null)
                 {
                     dynamic wmp = axWmpPlayer.GetOcx();
-                    if (wmp != null)
+                    if (wmp != null && wmp.controls != null)
                     {
                         wmp.controls.stop();
-                        wmp.URL = "";
+                        wmp.close();
                     }
-                }
-
-                System.Threading.Thread.Sleep(50);
-
-                if (!string.IsNullOrEmpty(tempMediaFile) && File.Exists(tempMediaFile))
-                {
-                    File.Delete(tempMediaFile);
                 }
             }
             catch { }
+        }
+
+        private void CleanupAllTempFiles()
+        {
+            foreach (var file in tempFilesToClean)
+            {
+                try
+                {
+                    if (File.Exists(file)) File.Delete(file);
+                }
+                catch { }
+            }
+            tempFilesToClean.Clear();
         }
 
         private void InitializeComponent()
@@ -96,6 +106,7 @@ namespace TilaAudioGui
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
+            this.Icon = new Icon("app.ico");
 
             pnlMediaContainer = new Panel()
             {
@@ -120,7 +131,7 @@ namespace TilaAudioGui
                 axWmpPlayer.Dock = DockStyle.Fill;
                 pnlVideoHolder.Controls.Add(axWmpPlayer);
                 ((System.ComponentModel.ISupportInitialize)(axWmpPlayer)).EndInit();
-                IntPtr forceHandle = axWmpPlayer.Handle; 
+                IntPtr forceHandle = axWmpPlayer.Handle;
             }
             catch { }
 
@@ -333,7 +344,7 @@ namespace TilaAudioGui
         {
             if (currentLang == "tr")
             {
-                this.Text = "Tıla Medya Oynatıcı & Özellikler";
+                this.Text = "Tıla Medya Oynatıcı";
                 lblSidebarTitle.Text = "📊 Medya Özellikleri";
                 lblPropName.Text = string.IsNullOrEmpty(loadedFileName) ? "Dosya: Bekleniyor..." : "Dosya: " + loadedFileName;
                 lblPropType.Text = isVideoMode ? "Biçim: Tıla Video (.tlv)" : (string.IsNullOrEmpty(loadedFileName) ? "Biçim: Yok" : "Biçim: Tıla Ses (.tls)");
@@ -349,7 +360,7 @@ namespace TilaAudioGui
             }
             else
             {
-                this.Text = "Tila Media Player & Properties";
+                this.Text = "Tila Media Player";
                 lblSidebarTitle.Text = "📊 Media Properties";
                 lblPropName.Text = string.IsNullOrEmpty(loadedFileName) ? "File: Waiting..." : "File: " + loadedFileName;
                 lblPropType.Text = isVideoMode ? "Format: Tila Video (.tlv)" : (string.IsNullOrEmpty(loadedFileName) ? "Format: None" : "Format: Tila Audio (.tls)");
@@ -374,193 +385,13 @@ namespace TilaAudioGui
         private void BtnToggleLoop_Click(object sender, EventArgs e)
         {
             isLoopEnabled = !isLoopEnabled;
-            if (isLoopEnabled)
-            {
-                btnToggleLoop.Text = (currentLang == "tr") ? "🔁 Döngü: Açık" : "🔁 Loop: On";
-                btnToggleLoop.BackColor = Color.FromArgb(0, 120, 212);
-            }
-            else
-            {
-                btnToggleLoop.Text = (currentLang == "tr") ? "🔁 Döngü: Kapalı" : "🔁 Loop: Off";
-                btnToggleLoop.BackColor = Color.FromArgb(45, 45, 55);
-            }
-        }
-
-        private void BtnConvert_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Title = (currentLang == "tr") ? "Dönüştürülecek Medya Dosyasını Seçin" : "Select Media File to Convert";
-            ofd.Filter = (currentLang == "tr") ? "Tüm Desteklenenler|*.mp3;*.wav;*.mp4;*.jpg;*.png|Ses Dosyaları (*.mp3;*.wav)|*.mp3;*.wav|Video ve Resim (*.mp4;*.jpg;*.png)|*.mp4;*.jpg;*.png" : "All Supported|*.mp3;*.wav;*.mp4;*.jpg;*.png|Audio Files (*.mp3;*.wav)|*.mp3;*.wav|Video and Image (*.mp4;*.jpg;*.png)|*.mp4;*.jpg;*.png";
-
-            if (ofd.ShowDialog() == DialogResult.OK)
-            {
-                string ext = Path.GetExtension(ofd.FileName).ToLower();
-                bool isAudio = (ext == ".mp3" || ext == ".wav");
-
-                SaveFileDialog sfd = new SaveFileDialog();
-                if (isAudio)
-                {
-                    sfd.Title = (currentLang == "tr") ? ".TLS (Ses) Olarak Kaydet" : "Save as .TLS (Audio)";
-                    sfd.Filter = "Tıla Ses Dosyası (*.tls)|*.tls";
-                    sfd.FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".tls";
-                }
-                else
-                {
-                    sfd.Title = (currentLang == "tr") ? ".TLV (Video) Olarak Kaydet" : "Save as .TLV (Video)";
-                    sfd.Filter = "Tıla Video Dosyası (*.tlv)|*.tlv";
-                    sfd.FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".tlv";
-                }
-
-                if (sfd.ShowDialog() == DialogResult.OK)
-                {
-                    try
-                    {
-                        if (isAudio)
-                        {
-                            ConvertFileToTls(ofd.FileName, sfd.FileName);
-                            MessageBox.Show((currentLang == "tr") ? "Ses dosyası başarıyla .tls formatına dönüştürüldü!" : "Audio file successfully converted to .tls format!", (currentLang == "tr") ? "Tamamlandı" : "Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        else
-                        {
-                            ConvertFileToTlv(ofd.FileName, sfd.FileName);
-                            MessageBox.Show((currentLang == "tr") ? "Video/Resim dosyası başarıyla .tlv formatına dönüştürüldü!" : "Video/Image file successfully converted to .tlv format!", (currentLang == "tr") ? "Tamamlandı" : "Completed", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(((currentLang == "tr") ? "Dönüştürme hatası: " : "Conversion error: ") + ex.Message, (currentLang == "tr") ? "Hata" : "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-        }
-
-        private void ConvertFileToTls(string inputPath, string outputPath)
-        {
-            byte[] rawBytes = File.ReadAllBytes(inputPath);
-            byte key = 0x5A;
-            byte[] payload = new byte[rawBytes.Length];
-            for (int i = 0; i < payload.Length; i++) { payload[i] = (byte)(rawBytes[i] ^ key); }
-
-            using (FileStream fs = new FileStream(outputPath, FileMode.Create))
-            using (BinaryWriter bw = new BinaryWriter(fs))
-            {
-                bw.Write(Encoding.ASCII.GetBytes("TLS2"));
-                bw.Write((int)44100);
-                bw.Write((short)2);
-                bw.Write((short)16);
-                bw.Write((int)payload.Length);
-                bw.Write(payload);
-            }
-        }
-
-        private void ConvertFileToTlv(string inputPath, string outputPath)
-        {
-            byte[] rawBytes = File.ReadAllBytes(inputPath);
-            byte key = 0x5A;
-            byte[] payload = new byte[rawBytes.Length];
-            for (int i = 0; i < payload.Length; i++) { payload[i] = (byte)(rawBytes[i] ^ key); }
-
-            using (FileStream fs = new FileStream(outputPath, FileMode.Create))
-            using (BinaryWriter bw = new BinaryWriter(fs))
-            {
-                bw.Write(Encoding.ASCII.GetBytes("TLV1"));
-                bw.Write((int)1920);
-                bw.Write((int)1080);
-                bw.Write((int)0);
-                bw.Write(payload);
-            }
-        }
-
-        private void TbVolume_Scroll(object sender, EventArgs e)
-        {
-            ApplyVolume();
-        }
-
-        private void ApplyVolume()
-        {
-            if (axWmpPlayer != null)
-            {
-                try
-                {
-                    dynamic wmp = axWmpPlayer.GetOcx();
-                    if (wmp != null && wmp.settings != null)
-                    {
-                        wmp.settings.volume = tbVolume.Value;
-                    }
-                }
-                catch { }
-            }
-        }
-
-        private void TbProgress_MouseDown(object sender, MouseEventArgs e)
-        {
-            isUserSeeking = true;
-        }
-
-        private void TbProgress_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (isUserSeeking && axWmpPlayer != null)
-            {
-                try
-                {
-                    dynamic wmp = axWmpPlayer.GetOcx();
-                    if (wmp != null && wmp.controls != null)
-                    {
-                        wmp.controls.currentPosition = tbProgress.Value;
-                        currentSeconds = tbProgress.Value;
-                        UpdateTimerLabel();
-                    }
-                }
-                catch { }
-            }
-            isUserSeeking = false;
-        }
-
-        private void TbProgress_Scroll(object sender, EventArgs e)
-        {
-            if (isUserSeeking)
-            {
-                currentSeconds = tbProgress.Value;
-                UpdateTimerLabel();
-            }
-        }
-
-        private void TimerAnim_Tick(object sender, EventArgs e)
-        {
-            animAngle = (animAngle + 4) % 360;
-            pnlMediaContainer.Invalidate();
-        }
-
-        private void PnlMediaContainer_Paint(object sender, PaintEventArgs e)
-        {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            Rectangle rect = pnlMediaContainer.ClientRectangle;
-            rect.Width--; rect.Height--;
-            GraphicsPath path = GetRoundedPath(rect, 16);
-            pnlMediaContainer.Region = new Region(path);
-
-            if (isPlaying && !isVideoMode)
-            {
-                using (Pen pen = new Pen(Color.FromArgb(0, 120, 212), 4))
-                {
-                    pen.DashStyle = DashStyle.Dot;
-                    int cx = pnlMediaContainer.Width / 2;
-                    int cy = pnlMediaContainer.Height / 2;
-                    int size = 120;
-
-                    e.Graphics.TranslateTransform(cx, cy);
-                    e.Graphics.RotateTransform(animAngle);
-                    e.Graphics.DrawEllipse(pen, -size / 2, -size / 2, size, size);
-                    e.Graphics.ResetTransform();
-                }
-            }
+            btnToggleLoop.BackColor = isLoopEnabled ? Color.FromArgb(0, 120, 212) : Color.FromArgb(45, 45, 55);
+            UpdateTexts();
         }
 
         private void BtnOpen_Click(object sender, EventArgs e)
         {
             StopPlayback();
-            CleanupTempFile();
 
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "Tıla Medya Dosyaları (*.tls;*.tlv)|*.tls;*.tlv";
@@ -575,29 +406,29 @@ namespace TilaAudioGui
                     byte[] fileBytes = File.ReadAllBytes(ofd.FileName);
                     if (fileBytes.Length < 16)
                     {
-                        MessageBox.Show((currentLang == "tr") ? "Dosya yapısı bozuk!" : "File structure is corrupted!", (currentLang == "tr") ? "Hata" : "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Dosya yapısı bozuk!", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
                     string magic = Encoding.ASCII.GetString(fileBytes, 0, 4);
 
-                    if (magic == "TLS2")
+                    if (magic == "TLS3" || magic == "TLS2")
                     {
                         isVideoMode = false;
                         pnlVideoHolder.Visible = false;
                         lblCenterIcon.Visible = true;
-                        LoadTlsAudio(fileBytes);
+                        LoadTlsMedia(fileBytes);
                     }
-                    else if (magic == "TLV1")
+                    else if (magic == "TLV2" || magic == "TLV1")
                     {
                         isVideoMode = true;
                         lblCenterIcon.Visible = false;
                         pnlVideoHolder.Visible = true;
-                        LoadTlvVideo(fileBytes);
+                        LoadTlvMedia(fileBytes, magic);
                     }
                     else
                     {
-                        MessageBox.Show((currentLang == "tr") ? "Geçersiz Tıla medya dosyası!" : "Invalid Tila media file!", (currentLang == "tr") ? "Hata" : "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Geçersiz Tıla medya formatı!", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         return;
                     }
 
@@ -609,29 +440,28 @@ namespace TilaAudioGui
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Hata: " + ex.Message);
+                    MessageBox.Show("Medya yükleme hatası: " + ex.Message);
                 }
             }
         }
 
-        private void LoadTlsAudio(byte[] fileBytes)
+        private void LoadTlsMedia(byte[] fileBytes)
         {
-            int dataSize = BitConverter.ToInt32(fileBytes, 12);
-            int pcmDataLen = dataSize;
-            if (fileBytes.Length < 16 + pcmDataLen) { pcmDataLen = fileBytes.Length - 16; }
-
-            byte[] encryptedPcm = new byte[pcmDataLen];
-            Array.Copy(fileBytes, 16, encryptedPcm, 0, pcmDataLen);
-
             byte key = 0x5A;
-            byte[] pcmData = new byte[encryptedPcm.Length];
-            for (int i = 0; i < encryptedPcm.Length; i++)
+            int headerSize = 16;
+            int payloadLen = fileBytes.Length - headerSize;
+
+            byte[] decrypted = new byte[payloadLen];
+            for (int i = 0; i < payloadLen; i++)
             {
-                pcmData[i] = (byte)(encryptedPcm[i] ^ key);
+                decrypted[i] = (byte)(fileBytes[headerSize + i] ^ key);
             }
 
-            tempMediaFile = Path.Combine(Path.GetTempPath(), "tila_audio_" + Guid.NewGuid().ToString("N") + ".mp3");
-            File.WriteAllBytes(tempMediaFile, pcmData);
+            string tempFile = Path.Combine(Path.GetTempPath(), "tila_snd_" + Guid.NewGuid().ToString("N") + ".mp3");
+            File.WriteAllBytes(tempFile, decrypted);
+
+            currentTempFile = tempFile;
+            tempFilesToClean.Add(tempFile);
 
             if (axWmpPlayer != null)
             {
@@ -641,55 +471,50 @@ namespace TilaAudioGui
                     if (wmp != null)
                     {
                         wmp.uiMode = "none";
-                        wmp.URL = tempMediaFile;
+                        wmp.URL = tempFile;
                     }
                 }
                 catch { }
             }
         }
 
-        private void LoadTlvVideo(byte[] fileBytes)
+        private void LoadTlvMedia(byte[] fileBytes, string magic)
         {
-            int audioSize = BitConverter.ToInt32(fileBytes, 12);
             byte key = 0x5A;
+            int headerSize = (magic == "TLV2") ? 20 : 16;
+            int payloadLen = fileBytes.Length - headerSize;
 
-            int frameOffset = 16 + audioSize;
-            int mediaSize = fileBytes.Length - frameOffset;
-
-            if (mediaSize > 0)
+            byte[] decrypted = new byte[payloadLen];
+            for (int i = 0; i < payloadLen; i++)
             {
-                byte[] encryptedMedia = new byte[mediaSize];
-                Array.Copy(fileBytes, frameOffset, encryptedMedia, 0, mediaSize);
+                decrypted[i] = (byte)(fileBytes[headerSize + i] ^ key);
+            }
 
-                byte[] mediaData = new byte[encryptedMedia.Length];
-                for (int i = 0; i < encryptedMedia.Length; i++)
+            string tempFile = Path.Combine(Path.GetTempPath(), "tila_vid_" + Guid.NewGuid().ToString("N") + ".mp4");
+            File.WriteAllBytes(tempFile, decrypted);
+
+            currentTempFile = tempFile;
+            tempFilesToClean.Add(tempFile);
+
+            if (axWmpPlayer != null)
+            {
+                try
                 {
-                    mediaData[i] = (byte)(encryptedMedia[i] ^ key);
-                }
-
-                tempMediaFile = Path.Combine(Path.GetTempPath(), "tila_video_" + Guid.NewGuid().ToString("N") + ".mp4");
-                File.WriteAllBytes(tempMediaFile, mediaData);
-
-                if (axWmpPlayer != null)
-                {
-                    try
+                    dynamic wmp = axWmpPlayer.GetOcx();
+                    if (wmp != null)
                     {
-                        dynamic wmp = axWmpPlayer.GetOcx();
-                        if (wmp != null)
-                        {
-                            wmp.uiMode = "none";
-                            wmp.stretchToFit = true;
-                            wmp.URL = tempMediaFile;
-                        }
+                        wmp.uiMode = "none";
+                        wmp.stretchToFit = true;
+                        wmp.URL = tempFile;
                     }
-                    catch { }
                 }
+                catch { }
             }
         }
 
         private void StartPlayback()
         {
-            if (axWmpPlayer != null && !string.IsNullOrEmpty(tempMediaFile))
+            if (axWmpPlayer != null && !string.IsNullOrEmpty(currentTempFile))
             {
                 try
                 {
@@ -697,7 +522,7 @@ namespace TilaAudioGui
                     if (wmp != null && wmp.controls != null)
                     {
                         wmp.controls.play();
-                        wmp.stretchToFit = true;
+                        if (isVideoMode) wmp.stretchToFit = true;
                     }
                 }
                 catch { }
@@ -768,6 +593,57 @@ namespace TilaAudioGui
             StopPlayback();
         }
 
+        private void TbVolume_Scroll(object sender, EventArgs e)
+        {
+            ApplyVolume();
+        }
+
+        private void ApplyVolume()
+        {
+            if (axWmpPlayer != null)
+            {
+                try
+                {
+                    dynamic wmp = axWmpPlayer.GetOcx();
+                    if (wmp != null && wmp.settings != null)
+                    {
+                        wmp.settings.volume = tbVolume.Value;
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private void TbProgress_MouseDown(object sender, MouseEventArgs e) { isUserSeeking = true; }
+
+        private void TbProgress_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (isUserSeeking && axWmpPlayer != null)
+            {
+                try
+                {
+                    dynamic wmp = axWmpPlayer.GetOcx();
+                    if (wmp != null && wmp.controls != null)
+                    {
+                        wmp.controls.currentPosition = tbProgress.Value;
+                        currentSeconds = tbProgress.Value;
+                        UpdateTimerLabel();
+                    }
+                }
+                catch { }
+            }
+            isUserSeeking = false;
+        }
+
+        private void TbProgress_Scroll(object sender, EventArgs e)
+        {
+            if (isUserSeeking)
+            {
+                currentSeconds = tbProgress.Value;
+                UpdateTimerLabel();
+            }
+        }
+
         private void TimerProgress_Tick(object sender, EventArgs e)
         {
             if (axWmpPlayer != null && !isUserSeeking)
@@ -789,8 +665,6 @@ namespace TilaAudioGui
                         tbProgress.Maximum = totalSeconds > 0 ? totalSeconds : 100;
                         tbProgress.Value = Math.Min(currentSeconds, tbProgress.Maximum);
                         UpdateTimerLabel();
-
-                        if (isVideoMode) wmp.stretchToFit = true;
                     }
                 }
                 catch { }
@@ -802,6 +676,106 @@ namespace TilaAudioGui
             TimeSpan current = TimeSpan.FromSeconds(currentSeconds);
             TimeSpan total = TimeSpan.FromSeconds(totalSeconds);
             lblTime.Text = string.Format("{0:D2}:{1:D2} / {2:D2}:{3:D2}", current.Minutes, current.Seconds, total.Minutes, total.Seconds);
+        }
+
+        private void TimerAnim_Tick(object sender, EventArgs e)
+        {
+            animAngle = (animAngle + 4) % 360;
+            pnlMediaContainer.Invalidate();
+        }
+
+        private void PnlMediaContainer_Paint(object sender, PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle rect = pnlMediaContainer.ClientRectangle;
+            rect.Width--; rect.Height--;
+            GraphicsPath path = GetRoundedPath(rect, 16);
+            pnlMediaContainer.Region = new Region(path);
+
+            if (isPlaying && !isVideoMode)
+            {
+                using (Pen pen = new Pen(Color.FromArgb(0, 120, 212), 4))
+                {
+                    pen.DashStyle = DashStyle.Dot;
+                    int cx = pnlMediaContainer.Width / 2;
+                    int cy = pnlMediaContainer.Height / 2;
+                    int size = 120;
+
+                    e.Graphics.TranslateTransform(cx, cy);
+                    e.Graphics.RotateTransform(animAngle);
+                    e.Graphics.DrawEllipse(pen, -size / 2, -size / 2, size, size);
+                    e.Graphics.ResetTransform();
+                }
+            }
+        }
+
+        private void BtnConvert_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Title = (currentLang == "tr") ? "Dönüştürülecek Medya Dosyasını Seçin" : "Select Media File to Convert";
+            ofd.Filter = (currentLang == "tr") ?
+                "Tüm Desteklenen Medyalar|*.mp3;*.wav;*.aac;*.flac;*.ogg;*.m4a;*.mp4;*.avi;*.mkv;*.mov;*.wmv;*.webm;*.jpg;*.png;*.gif;*.bmp|Ses Dosyaları (*.mp3;*.wav;*.aac;*.flac;*.ogg;*.m4a)|*.mp3;*.wav;*.aac;*.flac;*.ogg;*.m4a|Video ve Resim Dosyaları (*.mp4;*.avi;*.mkv;*.mov;*.wmv;*.webm;*.jpg;*.png;*.gif;*.bmp)|*.mp4;*.avi;*.mkv;*.mov;*.wmv;*.webm;*.jpg;*.png;*.gif;*.bmp" :
+                "All Supported Media|*.mp3;*.wav;*.aac;*.flac;*.ogg;*.m4a;*.mp4;*.avi;*.mkv;*.mov;*.wmv;*.webm;*.jpg;*.png;*.gif;*.bmp|Audio Files (*.mp3;*.wav;*.aac;*.flac;*.ogg;*.m4a)|*.mp3;*.wav;*.aac;*.flac;*.ogg;*.m4a|Video & Image Files (*.mp4;*.avi;*.mkv;*.mov;*.wmv;*.webm;*.jpg;*.png;*.gif;*.bmp)|*.mp4;*.avi;*.mkv;*.mov;*.wmv;*.webm;*.jpg;*.png;*.gif;*.bmp";
+
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                string ext = Path.GetExtension(ofd.FileName).ToLower();
+                bool isAudio = (ext == ".mp3" || ext == ".wav" || ext == ".aac" || ext == ".flac" || ext == ".ogg" || ext == ".m4a");
+
+                SaveFileDialog sfd = new SaveFileDialog();
+                if (isAudio)
+                {
+                    sfd.Title = (currentLang == "tr") ? ".TLS (Tıla Ses) Olarak Kaydet" : "Save as .TLS (Tila Audio)";
+                    sfd.Filter = "Tıla Ses Dosyası (*.tls)|*.tls";
+                    sfd.FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".tls";
+                }
+                else
+                {
+                    sfd.Title = (currentLang == "tr") ? ".TLV (Tıla Video) Olarak Kaydet" : "Save as .TLV (Tila Video)";
+                    sfd.Filter = "Tıla Video Dosyası (*.tlv)|*.tlv";
+                    sfd.FileName = Path.GetFileNameWithoutExtension(ofd.FileName) + ".tlv";
+                }
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        byte[] rawBytes = File.ReadAllBytes(ofd.FileName);
+                        byte key = 0x5A;
+                        byte[] encrypted = new byte[rawBytes.Length];
+                        for (int i = 0; i < rawBytes.Length; i++) { encrypted[i] = (byte)(rawBytes[i] ^ key); }
+
+                        using (FileStream fs = new FileStream(sfd.FileName, FileMode.Create))
+                        using (BinaryWriter bw = new BinaryWriter(fs))
+                        {
+                            if (isAudio)
+                            {
+                                bw.Write(Encoding.ASCII.GetBytes("TLS3"));
+                                bw.Write((int)22050);
+                                bw.Write((short)2);
+                                bw.Write((short)16);
+                                bw.Write((int)encrypted.Length);
+                                bw.Write(encrypted);
+                                MessageBox.Show((currentLang == "tr") ? "Ses dosyası başarıyla .tls formatına paketlendi!" : "Audio packed into .tls format!", (currentLang == "tr") ? "Başarılı" : "Success");
+                            }
+                            else
+                            {
+                                bw.Write(Encoding.ASCII.GetBytes("TLV2"));
+                                bw.Write((int)1280);
+                                bw.Write((int)720);
+                                bw.Write((int)25);
+                                bw.Write((int)0);
+                                bw.Write(encrypted);
+                                MessageBox.Show((currentLang == "tr") ? "Video/Resim dosyası başarıyla .tlv formatına paketlendi!" : "Video/Image packed into .tlv format!", (currentLang == "tr") ? "Başarılı" : "Success");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(((currentLang == "tr") ? "Dönüştürme hatası: " : "Conversion error: ") + ex.Message, (currentLang == "tr") ? "Hata" : "Error");
+                    }
+                }
+            }
         }
 
         private GraphicsPath GetRoundedPath(Rectangle rect, int radius)
@@ -828,7 +802,6 @@ namespace TilaAudioGui
     public class RoundedButton : Button
     {
         public int BorderRadius { get; set; }
-
         public RoundedButton()
         {
             this.BorderRadius = 20;
@@ -840,7 +813,6 @@ namespace TilaAudioGui
         protected override void OnPaint(PaintEventArgs pevent)
         {
             pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
             Rectangle rect = new Rectangle(0, 0, this.Width, this.Height);
             using (GraphicsPath path = GetPath(rect, BorderRadius))
             {
@@ -850,7 +822,6 @@ namespace TilaAudioGui
                     pevent.Graphics.FillPath(brush, path);
                 }
             }
-
             TextRenderer.DrawText(pevent.Graphics, this.Text, this.Font, rect, this.ForeColor, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
